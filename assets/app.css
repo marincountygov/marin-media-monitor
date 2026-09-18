@@ -64,6 +64,13 @@
   text-decoration: underline;
 }
 
+#sources-table-wrap button[data-goto-feed-source] {
+  width: auto;
+  margin: 0;
+  padding: 0.25rem 0.75rem;
+  white-space: nowrap;
+}
+
 th[aria-sort="ascending"] .mm-sort-button::after {
   content: " \25b2";
 }
@@ -301,7 +308,13 @@ th[aria-sort="descending"] .mm-sort-button::after {
 
 .mm-card__source {
   font-weight: 400;
-  color: var(--app-text);
+}
+
+/* Match the card title's link styling (same underlying --app-accent, via
+   --pico-primary) instead of the plain --app-text color this used to
+   force onto it, so a source link actually reads as a link. */
+.mm-card__source a {
+  color: var(--app-accent);
 }
 
 /* .app-badge comes from the vendored shared/app-brand.css bundle
@@ -383,6 +396,19 @@ th[aria-sort="descending"] .mm-sort-button::after {
 .mm-monitor-group h3 {
   margin-bottom: 0.75rem;
   font-weight: 400;
+}
+
+/* The Monitors page's card heading doubles as its "jump to this filter
+   in Latest" control — styled like any other link on the page (same
+   --app-accent as a news card title) so it reads as clickable. */
+.mm-monitor-name {
+  all: unset;
+  display: inline;
+  font: inherit;
+  font-weight: 700;
+  color: var(--app-accent);
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 /* Include/exclude phrases as pills, not a bulleted list — avoids any

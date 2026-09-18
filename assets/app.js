@@ -559,6 +559,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <th><button type="button" class="mm-sort-button" data-sort-key="status">Status</button></th>
             <th><button type="button" class="mm-sort-button" data-sort-key="lastchecked">Last checked</button></th>
             <th><button type="button" class="mm-sort-button" data-sort-key="items">Items</button></th>
+            <th>Filter</th>
           </tr>
         </thead>
         <tbody>
@@ -586,6 +587,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <td>${statusMarkup}${source.statusDetail ? ` <span class="app-help-text">(${escapeHtml(source.statusDetail)})</span>` : ""}</td>
                 <td>${escapeHtml(lastChecked)}</td>
                 <td>${source.itemCount || 0}</td>
+                <td><button type="button" class="secondary" data-goto-feed-source="${escapeHtml(source.id)}">Filter</button></td>
               </tr>`;
             })
             .join("")}
@@ -684,7 +686,31 @@ document.addEventListener("DOMContentLoaded", () => {
     const checkbox = elements.monitorChips?.querySelector(`input[data-monitor-id="${monitorId}"]`);
     const details = checkbox?.closest("details");
     if (details) details.open = true;
+    syncUrlFromState();
     renderFeed();
+  }
+
+  /** Same as selectOnlyMonitor, for the Console's feed-source filter —
+   * used by the Sources page's "Filter" button. */
+  function selectOnlyFeedSource(sourceId) {
+    state.selectedFeedSources = new Set([sourceId]);
+    elements.feedSourceFilter?.querySelectorAll("input[data-feed-source-id]").forEach((checkbox) => {
+      checkbox.checked = checkbox.dataset.feedSourceId === sourceId;
+    });
+    const checkbox = elements.feedSourceFilter?.querySelector(`input[data-feed-source-id="${sourceId}"]`);
+    const details = checkbox?.closest("details");
+    if (details) details.open = true;
+    syncUrlFromState();
+    renderFeed();
+  }
+
+  /** The Monitors and Sources pages' "Filter" buttons jump to the Latest
+   * tab with that one monitor/source applied — switching the hash first
+   * so app-shell's tab-section logic shows #latest before the filter
+   * panel's own open/checked state gets updated underneath it. */
+  function goToLatestFilteredBy(applyFilter) {
+    window.location.hash = "latest";
+    applyFilter();
   }
 
   function renderMonitorsList() {
@@ -701,7 +727,7 @@ document.addEventListener("DOMContentLoaded", () => {
           .map(
             (monitor) => `
           <article class="app-card">
-            <h4>${escapeHtml(monitor.name)}</h4>
+            <h4><button type="button" class="mm-monitor-name" data-goto-monitor="${escapeHtml(monitor.id)}">${escapeHtml(monitor.name)}</button></h4>
             <p class="app-help-text">Include</p>
             ${renderTermList(monitor.include)}
             ${monitor.exclude.length ? `<p class="app-help-text">Exclude</p>${renderTermList(monitor.exclude)}` : ""}
@@ -899,6 +925,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const badge = event.target.closest("[data-filter-monitor]");
     if (!badge) return;
     selectOnlyMonitor(badge.dataset.filterMonitor);
+  });
+
+  // Delegated for the same reason as #media-feed above — renderMonitorsList()
+  // and renderSourceTableRows() redraw their lists from scratch on every
+  // data refresh/sort.
+  elements.monitorsList?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-goto-monitor]");
+    if (!button) return;
+    goToLatestFilteredBy(() => selectOnlyMonitor(button.dataset.gotoMonitor));
+  });
+
+  elements.sourcesWrap?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-goto-feed-source]");
+    if (!button) return;
+    goToLatestFilteredBy(() => selectOnlyFeedSource(button.dataset.gotoFeedSource));
   });
 
   elements.contentTabs?.addEventListener("click", (event) => {
