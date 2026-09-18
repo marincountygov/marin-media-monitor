@@ -63,9 +63,9 @@
               <ul class="search-facet-list"><li class="app-help-text">Loading monitors&hellip;</li></ul>
             </fieldset>
 
-            <fieldset class="search-facet-group" id="platform-checkboxes" data-loading="true">
+            <fieldset class="search-facet-group" id="feed-source-filter" data-loading="true">
               <legend>Sources</legend>
-              <ul class="search-facet-list"><li class="app-help-text">Loading sources&hellip;</li></ul>
+              <p class="app-help-text">Loading sources&hellip;</p>
             </fieldset>
           </aside>
 
@@ -82,10 +82,11 @@
               <button type="submit" class="mm-refresh" id="refresh-button" hidden>Refresh</button>
             </div>
 
-            <p class="app-help-text" id="active-filters"></p>
-
             <div class="mm-results-actions">
-              <p class="search-results-count app-help-text" id="mention-counts" aria-live="polite"></p>
+              <div class="mm-results-summary">
+                <p class="app-help-text" id="active-filters"></p>
+                <p class="search-results-count app-help-text" id="mention-counts" aria-live="polite"></p>
+              </div>
               <button type="button" class="secondary mm-copy-button" id="copy-email-button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>Copy</button>
             </div>
 
@@ -99,11 +100,22 @@
         </form>
       </section>
 
-      <section id="sources" class="app-card" data-tab-section="sources" hidden>
+      <section id="sources" class="app-page-heading" data-tab-section="sources" hidden>
         <h2>Sources</h2>
         <p>Every configured source, its ingestion method, and its status as of the last build.</p>
-        <div role="tablist" aria-label="Filter sources by type" id="source-type-tabs"></div>
-        <div id="sources-table-wrap" class="app-table-wrap"><p class="app-help-text" id="sources-status">Loading&hellip;</p></div>
+
+        <div class="search-layout">
+          <aside class="search-sidebar" aria-label="Filter sources">
+            <fieldset class="search-facet-group" id="source-filter" data-loading="true">
+              <legend>Filter by source</legend>
+              <p class="app-help-text">Loading&hellip;</p>
+            </fieldset>
+          </aside>
+
+          <div class="search-results">
+            <div id="sources-table-wrap" class="app-table-wrap"><p class="app-help-text" id="sources-status">Loading&hellip;</p></div>
+          </div>
+        </div>
       </section>
 
       <section id="monitors" class="app-card" data-tab-section="monitors" hidden>
