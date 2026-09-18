@@ -334,6 +334,12 @@ monitors:
       - ReadyMarin
       - Ready Marin
 
+  - id: engage-marin
+    name: Engage Marin
+    group: Services
+    include:
+      - Engage Marin
+
   # --- Events & Places ---
   - id: marin-county-fair
     name: Marin County Fair
@@ -363,6 +369,18 @@ monitors:
     include:
       - Marin Cultural Association
       - [word:MCA, Marin]
+
+  - id: holiday-light-spectacular
+    name: Holiday Light Spectacular
+    group: Events & Places
+    include:
+      - Holiday Light Spectacular
+
+  - id: roller-disco-daze
+    name: Roller Disco Daze
+    group: Events & Places
+    include:
+      - Roller Disco Daze
 
   # --- Topics ---
   - id: marin-flooding
@@ -477,3 +495,21 @@ monitors:
     group: People
     include:
       - Jason Weber
+
+  - id: steve-dow
+    name: Steve Dow
+    group: People
+    include:
+      - Steve Dow
+
+  - id: libby-garrison
+    name: Libby Garrison
+    group: People
+    include:
+      - Libby Garrison
+
+  - id: jennifer-olvera
+    name: Jennifer Olvera
+    group: People
+    include:
+      - Jennifer Olvera
