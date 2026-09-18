@@ -80,6 +80,55 @@ monitors:
       - Marin Civil Grand Jury
       - Marin Grand Jury
 
+  # --- Districts ---
+  # "District <N>" and "<N>th District" are too generic alone (school
+  # districts, fire districts, voting districts elsewhere all use the same
+  # phrasing) — paired with "Marin" as a compound AND clause to stay
+  # scoped to these five Board of Supervisors districts specifically. Each
+  # district's representative name is added as its own standalone term
+  # (already unambiguous, no Marin pairing needed) so a story naming just
+  # the supervisor still surfaces under their district.
+  - id: marin-district-1
+    name: Marin District 1
+    group: Districts
+    include:
+      - [District 1, word:Marin]
+      - [1st District, word:Marin]
+      - Mary Sackett
+
+  - id: marin-district-2
+    name: Marin District 2
+    group: Districts
+    include:
+      - [District 2, word:Marin]
+      - [2nd District, word:Marin]
+      - Brian Colbert
+
+  - id: marin-district-3
+    name: Marin District 3
+    group: Districts
+    include:
+      - [District 3, word:Marin]
+      - [3rd District, word:Marin]
+      - Stephanie Moulton-Peters
+
+  - id: marin-district-4
+    name: Marin District 4
+    group: Districts
+    include:
+      - [District 4, word:Marin]
+      - [4th District, word:Marin]
+      - Dennis Rodoni
+
+  - id: marin-district-5
+    name: Marin District 5
+    group: Districts
+    include:
+      - [District 5, word:Marin]
+      - [5th District, word:Marin]
+      - Eric Lucan
+      - Magali Limeta
+
   # --- Departments ---
   - id: marin-oem
     name: Marin Office of Emergency Management
