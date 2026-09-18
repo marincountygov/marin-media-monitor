@@ -6,17 +6,20 @@ document.addEventListener("DOMContentLoaded", () => {
     data: null,
     search: "",
     selectedMonitors: new Set(),
-    selectedPlatforms: new Set(),
+    // Individual sources selected in the Console's own sidebar filter
+    // (distinct from selectedSources below, which filters the /sources
+    // admin table).
+    selectedFeedSources: new Set(),
     contentType: "all",
     time: "24h",
-    sourceTypeFilter: "all",
-    sourceSortKey: null,
+    selectedSources: new Set(),
+    sourceSortKey: "name",
     sourceSortDirection: "ascending",
   };
 
   const elements = {
     monitorChips: document.querySelector("#monitor-chips"),
-    platformCheckboxes: document.querySelector("#platform-checkboxes"),
+    feedSourceFilter: document.querySelector("#feed-source-filter"),
     contentTabs: document.querySelector("#content-tabs"),
     searchInput: document.querySelector("#filter-search"),
     timeSelect: document.querySelector("#filter-time"),
@@ -29,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
     feed: document.querySelector("#media-feed"),
     statusMessage: document.querySelector("#app-status-message"),
     sourcesWrap: document.querySelector("#sources-table-wrap"),
-    sourceTypeTabs: document.querySelector("#source-type-tabs"),
+    sourceFilter: document.querySelector("#source-filter"),
     monitorsList: document.querySelector("#monitors-list"),
     copyEmailButton: document.querySelector("#copy-email-button"),
     copyFallback: document.querySelector("#copy-fallback"),
@@ -65,17 +68,21 @@ document.addEventListener("DOMContentLoaded", () => {
     nextdoor: "Nextdoor",
   };
 
-  // The Sources filter shows one checkbox per platform as in the plan's
-  // mockup (News / YouTube / Bluesky / Nextdoor / Reddit) even though "News"
-  // is backed by two distinct source types (direct rss + google-news
-  // fallback) — group them so the UI doesn't show "News" twice.
-  const PLATFORM_GROUPS = [
-    { key: "news", label: "News", types: ["rss", "google-news"] },
-    { key: "youtube", label: "YouTube", types: ["youtube", "youtube-rss"] },
-    { key: "bluesky", label: "Bluesky", types: ["bluesky"] },
-    { key: "nextdoor", label: "Nextdoor", types: ["nextdoor"] },
-    { key: "reddit", label: "Reddit", types: ["reddit"] },
-  ];
+  // Maps a source's connector type (config-level) to the same News/Video/
+  // Social buckets a matched item's own sourceType ends up in (see
+  // build/normalize.js's SOURCE_TYPE_BY_METHOD) — used to group the
+  // Console's source-filter sidebar by content type.
+  const CONTENT_TYPE_BY_CONNECTOR_TYPE = {
+    rss: "news",
+    "google-news": "news",
+    youtube: "video",
+    "youtube-rss": "video",
+    bluesky: "social",
+    reddit: "social",
+    nextdoor: "social",
+  };
+  const CONTENT_TYPE_GROUP_LABELS = { news: "News", video: "Video", social: "Social" };
+  const CONTENT_TYPE_GROUP_ORDER = ["news", "video", "social"];
 
   function escapeHtml(value) {
     return String(value ?? "")
@@ -109,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderAll() {
     renderLastUpdated();
     renderMonitorChips();
-    renderPlatformCheckboxes();
+    renderFeedSourceFilter();
     renderFeed();
     renderSourcesTable();
     renderMonitorsList();
@@ -185,43 +192,51 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function renderPlatformCheckboxes() {
-    if (!state.data || !elements.platformCheckboxes) return;
+  // Two-level filter, same pattern as Monitors: a collapsed-by-default
+  // group per content type (News/Video/Social), expanding to every
+  // individual source in it — so you can narrow the feed to one specific
+  // outlet (e.g. just SF Chronicle) instead of only a whole category.
+  function renderFeedSourceFilter() {
+    if (!state.data || !elements.feedSourceFilter) return;
     const sources = state.data.sources || [];
-    const groups = PLATFORM_GROUPS.filter((group) => sources.some((s) => group.types.includes(s.type)));
-    elements.platformCheckboxes.dataset.loading = "false";
+    elements.feedSourceFilter.dataset.loading = "false";
 
-    // Default: everything except Reddit/Nextdoor is checked — those two
-    // stay opt-in even when technically enabled, since they're the least
-    // proven/most access-constrained sources (see README).
-    if (state.selectedPlatforms.size === 0) {
-      groups.forEach((group) => {
-        if (group.key !== "reddit" && group.key !== "nextdoor") state.selectedPlatforms.add(group.key);
-      });
-    }
+    const groups = groupBy(sources, (s) => CONTENT_TYPE_BY_CONNECTOR_TYPE[s.type] || "news");
 
-    elements.platformCheckboxes.innerHTML =
+    elements.feedSourceFilter.innerHTML =
       "<legend>Sources</legend>" +
-      `<ul class="search-facet-list">${groups
-        .map((group) => {
-          const anyEnabled = sources.some((s) => group.types.includes(s.type) && s.enabled);
-          const checked = state.selectedPlatforms.has(group.key);
-          const id = `platform-${group.key}`;
-          return (
-            `<li><label for="${id}">` +
-            `<input type="checkbox" id="${id}" data-platform-key="${escapeHtml(group.key)}" ${checked ? "checked" : ""} ${anyEnabled ? "" : "disabled"}>` +
-            `${escapeHtml(group.label)} <span class="search-facet-count" data-platform-count="${escapeHtml(group.key)}"></span>` +
-            `${anyEnabled ? "" : ' <span class="app-help-text">(disabled)</span>'}` +
-            `</label></li>`
+      CONTENT_TYPE_GROUP_ORDER.filter((key) => groups.has(key))
+        .map((key) => {
+          const groupSources = [...groups.get(key)].sort((a, b) =>
+            a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" })
           );
+          return `
+        <details class="mm-facet-group">
+          <summary>${escapeHtml(CONTENT_TYPE_GROUP_LABELS[key])} <span class="app-help-text" data-content-type-count="${key}"></span></summary>
+          <ul class="search-facet-list">
+            ${groupSources
+              .map((source) => {
+                const id = `feed-source-${source.id}`;
+                const checked = state.selectedFeedSources.has(source.id);
+                return (
+                  `<li><label for="${id}">` +
+                  `<input type="checkbox" id="${id}" data-feed-source-id="${escapeHtml(source.id)}" ${checked ? "checked" : ""} ${source.enabled ? "" : "disabled"}>` +
+                  `${escapeHtml(source.name)} <span class="search-facet-count" data-feed-source-count="${escapeHtml(source.id)}"></span>` +
+                  `${source.enabled ? "" : ' <span class="app-help-text">(disabled)</span>'}` +
+                  `</label></li>`
+                );
+              })
+              .join("")}
+          </ul>
+        </details>`;
         })
-        .join("")}</ul>`;
+        .join("");
 
-    elements.platformCheckboxes.querySelectorAll("input[data-platform-key]").forEach((checkbox) => {
+    elements.feedSourceFilter.querySelectorAll("input[data-feed-source-id]").forEach((checkbox) => {
       checkbox.addEventListener("change", () => {
-        const key = checkbox.dataset.platformKey;
-        if (checkbox.checked) state.selectedPlatforms.add(key);
-        else state.selectedPlatforms.delete(key);
+        const id = checkbox.dataset.feedSourceId;
+        if (checkbox.checked) state.selectedFeedSources.add(id);
+        else state.selectedFeedSources.delete(id);
         renderFeed();
       });
     });
@@ -230,7 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // skipMonitor/skipPlatform let the facet-count logic ask "how many items
   // would match if every OTHER filter stayed as-is" for a given dimension,
   // instead of collapsing to whatever's currently selected in that facet.
-  function passesFilters(item, { skipMonitor = false, skipPlatform = false } = {}) {
+  function passesFilters(item, { skipMonitor = false, skipFeedSource = false } = {}) {
     if (
       !skipMonitor &&
       state.selectedMonitors.size > 0 &&
@@ -238,9 +253,8 @@ document.addEventListener("DOMContentLoaded", () => {
     ) {
       return false;
     }
-    if (!skipPlatform) {
-      const group = PLATFORM_GROUPS.find((g) => g.types.includes(item.platform));
-      if (!group || !state.selectedPlatforms.has(group.key)) return false;
+    if (!skipFeedSource && state.selectedFeedSources.size > 0 && !state.selectedFeedSources.has(item.sourceId)) {
+      return false;
     }
     if (state.contentType !== "all" && item.sourceType !== state.contentType) return false;
     if (state.time !== "all") {
@@ -261,7 +275,11 @@ document.addEventListener("DOMContentLoaded", () => {
   function updateFacetCounts() {
     if (!state.data) return;
 
-    const forMonitors = state.data.items.filter((item) => passesFilters(item, { skipMonitor: true }));
+    // skipFeedSource too: a monitor's count is its total match count, not
+    // limited to whichever Sources checkboxes happen to be checked right
+    // now — otherwise unchecking a source would make a monitor look like
+    // it has fewer matches than it really does.
+    const forMonitors = state.data.items.filter((item) => passesFilters(item, { skipMonitor: true, skipFeedSource: true }));
     (state.data.monitors || []).forEach((monitor) => {
       const count = forMonitors.filter((item) => item.matchedMonitors.includes(monitor.id)).length;
       const el = elements.monitorChips?.querySelector(`[data-monitor-count="${monitor.id}"]`);
@@ -282,10 +300,19 @@ document.addEventListener("DOMContentLoaded", () => {
       if (el) el.textContent = `(${count})`;
     });
 
-    const forPlatforms = state.data.items.filter((item) => passesFilters(item, { skipPlatform: true }));
-    PLATFORM_GROUPS.forEach((group) => {
-      const count = forPlatforms.filter((item) => group.types.includes(item.platform)).length;
-      const el = elements.platformCheckboxes?.querySelector(`[data-platform-count="${group.key}"]`);
+    const forFeedSources = state.data.items.filter((item) => passesFilters(item, { skipFeedSource: true }));
+    const feedSourceCountEls = Array.from(
+      elements.feedSourceFilter?.querySelectorAll("[data-feed-source-count]") || []
+    );
+    (state.data.sources || []).forEach((source) => {
+      const count = forFeedSources.filter((item) => item.sourceId === source.id).length;
+      const el = feedSourceCountEls.find((span) => span.dataset.feedSourceCount === source.id);
+      if (el) el.textContent = `(${count})`;
+    });
+
+    CONTENT_TYPE_GROUP_ORDER.forEach((key) => {
+      const count = forFeedSources.filter((item) => item.sourceType === key).length;
+      const el = elements.feedSourceFilter?.querySelector(`[data-content-type-count="${key}"]`);
       if (el) el.textContent = `(${count})`;
     });
   }
@@ -340,10 +367,13 @@ document.addEventListener("DOMContentLoaded", () => {
       parts.push("All monitors");
     }
 
-    const allPlatformKeys = PLATFORM_GROUPS.map((g) => g.key);
-    if (state.selectedPlatforms.size > 0 && state.selectedPlatforms.size < allPlatformKeys.length) {
-      const labels = PLATFORM_GROUPS.filter((g) => state.selectedPlatforms.has(g.key)).map((g) => g.label);
-      parts.push(labels.join(", "));
+    if (state.selectedFeedSources.size > 0) {
+      const names = state.data.sources
+        .filter((s) => state.selectedFeedSources.has(s.id))
+        .map((s) => s.name);
+      parts.push(names.join(", "));
+    } else {
+      parts.push("All sources");
     }
 
     if (state.contentType !== "all") {
@@ -387,33 +417,59 @@ document.addEventListener("DOMContentLoaded", () => {
     return { text: "Connected", status: "success" };
   }
 
-  function renderSourceTypeTabs(sources) {
-    if (!elements.sourceTypeTabs) return;
-    const types = Array.from(new Set(sources.map((s) => s.type)));
-    const tabs = [{ key: "all", label: "All" }, ...types.map((type) => ({ key: type, label: SOURCE_TYPE_LABELS[type] || type }))];
+  // Two-level filter, same pattern as the Monitors sidebar: a collapsed-by-
+  // default group per source type, expanding to individual source
+  // checkboxes — so you can narrow to one or more specific sources, not
+  // just a whole type at once.
+  function renderSourceFilter(sources) {
+    if (!elements.sourceFilter) return;
+    elements.sourceFilter.dataset.loading = "false";
 
-    elements.sourceTypeTabs.innerHTML = tabs
-      .map(
-        (tab) =>
-          `<button type="button" role="tab" aria-selected="${state.sourceTypeFilter === tab.key}" data-source-type="${escapeHtml(tab.key)}" class="mm-tab">${escapeHtml(tab.label)}</button>`
-      )
-      .join("");
+    const groups = groupBy(sources, (s) => s.type);
+    elements.sourceFilter.innerHTML =
+      "<legend>Filter by source</legend>" +
+      Array.from(groups.entries())
+        .map(([type, groupSources]) => {
+          const groupLabel = SOURCE_TYPE_LABELS[type] || type;
+          return `
+        <details class="mm-facet-group">
+          <summary>${escapeHtml(groupLabel)} <span class="app-help-text">(${groupSources.length})</span></summary>
+          <ul class="search-facet-list">
+            ${groupSources
+              .map((source) => {
+                const id = `source-${source.id}`;
+                const checked = state.selectedSources.has(source.id);
+                return (
+                  `<li><label for="${id}">` +
+                  `<input type="checkbox" id="${id}" data-source-id="${escapeHtml(source.id)}" ${checked ? "checked" : ""}>` +
+                  `${escapeHtml(source.name)} <span class="app-help-text">(${source.itemCount || 0})</span>` +
+                  `</label></li>`
+                );
+              })
+              .join("")}
+          </ul>
+        </details>`;
+        })
+        .join("");
 
-    elements.sourceTypeTabs.querySelectorAll("[data-source-type]").forEach((button) => {
-      button.addEventListener("click", () => {
-        state.sourceTypeFilter = button.dataset.sourceType;
-        renderSourcesTable();
+    elements.sourceFilter.querySelectorAll("input[data-source-id]").forEach((checkbox) => {
+      checkbox.addEventListener("change", () => {
+        const id = checkbox.dataset.sourceId;
+        if (checkbox.checked) state.selectedSources.add(id);
+        else state.selectedSources.delete(id);
+        // Re-render just the table, not the whole filter panel — otherwise
+        // every checkbox click would collapse any <details> group you had
+        // open, since renderSourceFilter() redraws it from scratch.
+        renderSourceTableRows();
       });
     });
   }
 
-  function renderSourcesTable() {
+  function renderSourceTableRows() {
     if (!state.data || !elements.sourcesWrap) return;
     const sources = state.data.sources || [];
-    renderSourceTypeTabs(sources);
-
     const visible =
-      state.sourceTypeFilter === "all" ? sources : sources.filter((s) => s.type === state.sourceTypeFilter);
+      state.selectedSources.size === 0 ? sources : sources.filter((s) => state.selectedSources.has(s.id));
 
     elements.sourcesWrap.innerHTML = `
       <table>
@@ -459,6 +515,12 @@ document.addEventListener("DOMContentLoaded", () => {
       </table>`;
 
     wireSourceTableSort(elements.sourcesWrap.querySelector("table"));
+  }
+
+  function renderSourcesTable() {
+    if (!state.data) return;
+    renderSourceFilter(state.data.sources || []);
+    renderSourceTableRows();
   }
 
   // shared/app-shell.js has a generic sortable-table behavior, but it only
@@ -751,7 +813,7 @@ document.addEventListener("DOMContentLoaded", () => {
     state.search = "";
     if (elements.searchInput) elements.searchInput.value = "";
     state.selectedMonitors = new Set();
-    state.selectedPlatforms = new Set();
+    state.selectedFeedSources = new Set();
     state.time = "24h";
     if (elements.timeSelect) elements.timeSelect.value = "24h";
     state.contentType = "all";
@@ -763,7 +825,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // the default selection," and the monitor groups should collapse back
     // to closed the same way they start on first load.
     renderMonitorChips();
-    renderPlatformCheckboxes();
+    renderFeedSourceFilter();
     renderFeed();
     announce("Filters reset.");
   }

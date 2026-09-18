@@ -200,6 +200,20 @@ sources:
     enabled: true
     note: Direct feed returns HTTP 403 (bot-protected); using Google News fallback.
 
+  - id: sf-chronicle
+    name: San Francisco Chronicle
+    type: google-news
+    region: san-francisco
+    query: site:sfchronicle.com
+    enabled: true
+    note: >-
+      No RSS feed found — checked /rss/, /feed/, the SFGATE-style
+      /bayarea/feed/*.php pattern, and the homepage for a feed-discovery
+      link; nothing worked (404s, one 403). SFGATE (its free digital-first
+      Hearst sister site) is already covered separately in this file;
+      Chronicle itself is the paywalled flagship paper. Using Google News
+      fallback.
+
   # --- Marin and North Bay (priority) ---
   - id: marin-ij
     name: Marin Independent Journal
@@ -333,6 +347,28 @@ sources:
     region: california
     url: https://localcalifornia.substack.com/feed
     enabled: true
+
+  - id: la-times-california
+    name: Los Angeles Times (California)
+    type: rss
+    region: california
+    url: https://www.latimes.com/california/rss2.0.xml
+    enabled: true
+
+  - id: sac-bee
+    name: Sacramento Bee
+    type: google-news
+    region: california
+    query: site:sacbee.com
+    enabled: true
+    note: >-
+      Direct connections to sacbee.com failed inconsistently during
+      verification (sometimes a large partial response then a stall,
+      sometimes an instant connection refusal) rather than a clean HTTP
+      403 — looks like active bot-detection (McClatchy properties
+      typically run Akamai) rather than a simple block, but the practical
+      result is the same: not reliably reachable. Using Google News
+      fallback.
 
   - id: silicon-valley-life
     name: This Is Your Life in Silicon Valley
