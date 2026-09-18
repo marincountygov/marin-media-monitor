@@ -60,7 +60,7 @@ sources:
     name: Bay Area Reporter
     type: google-news
     region: san-francisco
-    query: site:ebar.com
+    query: site:ebar.com when:60d
     enabled: true
     note: Direct feed returns HTTP 403 (bot-protected); using Google News fallback.
 
@@ -89,7 +89,7 @@ sources:
     name: KTVU FOX 2
     type: google-news
     region: bay-area
-    query: site:ktvu.com
+    query: site:ktvu.com when:60d
     enabled: true
     note: No public RSS endpoint found; using Google News fallback.
 
@@ -104,7 +104,7 @@ sources:
     name: CBS News Bay Area / KPIX
     type: google-news
     region: bay-area
-    query: site:cbsnews.com/sanfrancisco
+    query: site:cbsnews.com/sanfrancisco when:60d
     enabled: true
     note: No public RSS endpoint found; using Google News fallback.
 
@@ -155,7 +155,7 @@ sources:
     name: East Bay Times
     type: google-news
     region: east-bay
-    query: site:eastbaytimes.com
+    query: site:eastbaytimes.com when:60d
     enabled: true
     note: Direct feed returns HTTP 403 (bot-protected); using Google News fallback.
 
@@ -185,7 +185,7 @@ sources:
     name: The Six Fifty
     type: google-news
     region: peninsula
-    query: site:paloaltoonline.com "the six fifty"
+    query: site:paloaltoonline.com "the six fifty" when:60d
     enabled: true
     note: >-
       No longer a standalone feed — folded into Palo Alto Online's "The 650"
@@ -196,7 +196,7 @@ sources:
     name: Mercury News
     type: google-news
     region: south-bay
-    query: site:mercurynews.com
+    query: site:mercurynews.com when:60d
     enabled: true
     note: Direct feed returns HTTP 403 (bot-protected); using Google News fallback.
 
@@ -204,7 +204,7 @@ sources:
     name: San Francisco Chronicle
     type: google-news
     region: san-francisco
-    query: site:sfchronicle.com
+    query: site:sfchronicle.com when:60d
     enabled: true
     note: >-
       No RSS feed found — checked /rss/, /feed/, the SFGATE-style
@@ -219,7 +219,7 @@ sources:
     name: Marin Independent Journal
     type: google-news
     region: marin
-    query: site:marinij.com
+    query: site:marinij.com when:60d
     enabled: true
     note: Direct feed returns HTTP 403 (bot-protected); using Google News fallback.
 
@@ -234,7 +234,7 @@ sources:
     name: Marin Post
     type: google-news
     region: marin
-    query: site:marinpost.org
+    query: site:marinpost.org when:60d
     enabled: true
     note: Direct feed returns HTTP 401 (auth-walled); using Google News fallback.
 
@@ -249,7 +249,7 @@ sources:
     name: Press Democrat
     type: google-news
     region: north-bay
-    query: site:pressdemocrat.com
+    query: site:pressdemocrat.com when:60d
     enabled: true
     note: Direct feed returns HTTP 403 (bot-protected); using Google News fallback.
 
@@ -257,7 +257,7 @@ sources:
     name: North Bay Business Journal
     type: google-news
     region: north-bay
-    query: site:northbaybusinessjournal.com OR site:pressdemocrat.com "North Bay Business Journal"
+    query: site:northbaybusinessjournal.com OR site:pressdemocrat.com "North Bay Business Journal" when:60d
     enabled: true
     note: Redirects into pressdemocrat.com, which is bot-protected (403); using Google News fallback.
 
@@ -265,7 +265,7 @@ sources:
     name: Sonoma Index-Tribune
     type: google-news
     region: north-bay
-    query: site:sonomanews.com
+    query: site:sonomanews.com when:60d
     enabled: true
     note: Direct feed returns HTTP 403 (bot-protected); using Google News fallback.
 
@@ -273,7 +273,7 @@ sources:
     name: Sonoma County Gazette
     type: google-news
     region: north-bay
-    query: site:sonomacountygazette.com
+    query: site:sonomacountygazette.com when:60d
     enabled: true
     note: Direct feed returns HTTP 403 (bot-protected); using Google News fallback.
 
@@ -359,7 +359,7 @@ sources:
     name: Sacramento Bee
     type: google-news
     region: california
-    query: site:sacbee.com
+    query: site:sacbee.com when:60d
     enabled: true
     note: >-
       Direct connections to sacbee.com failed inconsistently during
@@ -383,6 +383,32 @@ sources:
     type: rss
     region: marin
     url: https://marinmagazine.com/feed/
+    enabled: true
+
+  - id: pbs-newshour
+    name: PBS NewsHour
+    type: rss
+    region: california
+    url: https://www.pbs.org/newshour/feeds/rss/headlines
+    enabled: true
+    note: National feed — Marin/Bay Area mentions only surface when a story reaches national coverage.
+
+  - id: krcb
+    name: KRCB (North Bay PBS/NPR)
+    type: google-news
+    region: north-bay
+    query: site:krcb.org when:60d
+    enabled: true
+    note: >-
+      krcb.org returns a Cloudflare "Attention Required" challenge page on
+      direct connection (verified 2026-09-18), same pattern as
+      marincounty.gov. Using Google News fallback.
+
+  - id: kpfa
+    name: KPFA
+    type: rss
+    region: bay-area
+    url: https://kpfa.org/feed/
     enabled: true
 
   # --- YouTube channels (free per-channel RSS feed, no API key/quota) ---
@@ -470,26 +496,34 @@ sources:
       testing, not a sign this feed doesn't exist. Re-check /sources after
       this has had time to cool down or once the scheduled build runs.
 
+  - id: marin-county-fire-youtube
+    name: Marin County Fire (YouTube)
+    type: youtube-rss
+    region: marin
+    channelId: UCwerjlgCRw2l9ipnFS_PtfQ
+    enabled: true
+    costCategory: free
+
   # --- Google News discovery (not tied to one outlet) ---
   - id: google-news-marin-county
     name: "Google News: Marin County"
     type: google-news
     region: marin
-    query: '"Marin County"'
+    query: '"Marin County" when:60d'
     enabled: true
 
   - id: google-news-marin-civic-center
     name: "Google News: Marin Civic Center"
     type: google-news
     region: marin
-    query: '"Marin Civic Center" OR "Marin County Civic Center"'
+    query: '"Marin Civic Center" OR "Marin County Civic Center" when:60d'
     enabled: true
 
   - id: patch-marin
     name: Patch.com (Marin)
     type: google-news
     region: marin
-    query: site:patch.com "Marin County"
+    query: site:patch.com "Marin County" when:60d
     enabled: true
     note: >-
       No RSS feed found (Next.js SPA, no exposed feed at any guessed
@@ -497,13 +531,21 @@ sources:
       using Google News rather than a direct connector, out of respect
       for that and because there's nothing to fetch anyway. Confirmed
       active Marin-area Patch towns: San Rafael, Novato, Mill Valley,
-      Sausalito, Tiburon, Marin City, Fairfax.
+      Sausalito, Tiburon, Marin City, Fairfax. Query needs `when:60d`
+      (matches the build's own 60-day PRUNE_DAYS window): without it,
+      Google ranks this site:-scoped search by relevance/popularity, not
+      recency, so a handful of old viral stories (2011–2023) crowd out
+      this week's actual articles — confirmed directly (verified
+      2026-09-18) that the plain query returns mostly old results while
+      adding a when: scope returns this week's stories. Applied the same
+      when:60d scope to every other google-news source in this file for
+      the same reason.
 
   - id: kwmr
     name: KWMR-FM
     type: google-news
     region: marin
-    query: site:kwmr.org
+    query: site:kwmr.org when:60d
     enabled: true
     note: >-
       kwmr.org has no real RSS feed — its "/feed/" route returns the
@@ -516,16 +558,25 @@ sources:
     name: County of Marin (marincounty.gov)
     type: google-news
     region: marin
-    query: site:marincounty.gov
+    query: site:marincounty.gov/news-releases when:60d
+    link: https://www.marincounty.gov/news-releases
     enabled: true
     note: >-
-      No usable RSS feed found. The site is behind the same Cloudflare
-      protection blocking other marincounty.gov paths in this project
-      (403 on every guessed feed path); its GovDelivery notification
-      account ("CAMARIN") returns 406 on the account-wide bulletins.rss
-      endpoint (likely needs a topic-specific ID this guess doesn't have);
-      and no feed-discovery link is exposed on the news-releases page.
-      Using Google News fallback for official county press releases.
+      No usable RSS feed found — re-checked specifically at
+      /news-releases (with ?format=rss, /rss, and ?feed=rss) and it's
+      behind the same Cloudflare protection as the rest of the site (403,
+      same challenge page). Its GovDelivery notification account
+      ("CAMARIN") returns 406 on the account-wide bulletins.rss endpoint
+      (likely needs a topic-specific ID this guess doesn't have). Using
+      Google News fallback for actual matching, scoped to the
+      /news-releases path specifically (verified 2026-09-18: the
+      unscoped site:marincounty.gov query surfaced bid notices,
+      inspection reports, and other non-news pages from elsewhere on the
+      domain; the path-scoped query returns only actual news releases),
+      but the "link" above points at the real news-releases listing page
+      instead of the
+      auto-derived Google search URL, since that's a more directly
+      useful destination for this one source.
 
   # --- Free APIs ---
   - id: youtube

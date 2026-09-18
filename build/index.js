@@ -6,7 +6,7 @@ const path = require("path");
 
 const { loadSources, loadMonitors } = require("./config");
 const { fetchSource, refreshIntervalFor } = require("./connectors");
-const { normalizeItem } = require("./normalize");
+const { normalizeItem, hostnameOf } = require("./normalize");
 const { matchItems } = require("./match");
 const { dedupeItems } = require("./dedupe");
 
@@ -43,6 +43,51 @@ function isDue(previousHealth, refreshIntervalMinutes, now) {
   if (!previousHealth?.lastFetchedAt) return true;
   const elapsedMinutes = (now - new Date(previousHealth.lastFetchedAt).getTime()) / 60_000;
   return elapsedMinutes >= refreshIntervalMinutes;
+}
+
+// Google's own site: search is a ranked subset, not a complete index of a
+// domain — the same story can turn up via a broad discovery query (e.g.
+// "Marin County") while NOT appearing in that outlet's own site:-scoped
+// query, purely due to Google's ranking on their end (confirmed directly:
+// an article whose real publisher is marincounty.gov showed up via the
+// generic "Marin County" query but not via site:marincounty.gov's own
+// query at the same moment). Left alone, that item stays permanently
+// attributed to the generic discovery source and never shows up when
+// filtering by the specific outlet, even though it's genuinely theirs.
+//
+// Fix: re-attribute every item to whichever CONFIGURED source's domain
+// actually matches its real publisher (sourceUrl), regardless of which
+// connector call happened to fetch it. Only affects items whose true
+// domain matches a MORE SPECIFIC configured source than the one that
+// fetched them — a source can't lose items to itself.
+function buildDomainIndex(sources) {
+  const index = new Map();
+  for (const source of sources) {
+    let domain;
+    if (source.type === "rss" && source.url) {
+      domain = hostnameOf(source.url);
+    } else if (source.type === "google-news" && source.query) {
+      // A query can scope to a path, not just a domain (e.g.
+      // site:marincounty.gov/news-releases) — strip that path back off so
+      // this index key stays a bare hostname, matching what hostnameOf()
+      // returns for an item's real publisher URL.
+      const match = /site:([^\s"]+)/i.exec(source.query);
+      if (match) domain = match[1].split("/")[0].replace(/^www\./i, "").toLowerCase();
+    }
+    if (domain) index.set(domain, source);
+  }
+  return index;
+}
+
+function reattributeBySourceDomain(items, domainIndex) {
+  for (const item of items) {
+    const domain = hostnameOf(item.sourceUrl);
+    const specificSource = domain && domainIndex.get(domain);
+    if (specificSource && specificSource.id !== item.sourceId) {
+      item.sourceId = specificSource.id;
+      item.source = specificSource.name;
+    }
+  }
 }
 
 async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
@@ -108,6 +153,8 @@ async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
     }
   }
 
+  reattributeBySourceDomain(allItems, buildDomainIndex(sources));
+
   const matched = matchItems(allItems, monitors);
   const deduped = dedupeItems(matched);
 
@@ -145,6 +192,10 @@ async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
 // every source type has one worth linking (youtube/bluesky/reddit/nextdoor
 // scan broadly, with no single "the source" page) — those get none.
 function sourceLink(source) {
+  // An explicit override always wins — e.g. pointing a google-news source
+  // at the outlet's own listing page instead of the generic auto-derived
+  // Google search URL, when there's a more directly useful destination.
+  if (source.link) return source.link;
   if (source.type === "rss" && source.url) return source.url;
   if (source.type === "google-news" && source.query) {
     return `https://news.google.com/search?q=${encodeURIComponent(source.query)}&hl=en-US&gl=US&ceid=US:en`;
