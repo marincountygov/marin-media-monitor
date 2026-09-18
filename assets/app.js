@@ -35,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sourceFilter: document.querySelector("#source-filter"),
     monitorsList: document.querySelector("#monitors-list"),
     copyEmailButton: document.querySelector("#copy-email-button"),
+    copyLinkButton: document.querySelector("#copy-link-button"),
     copyFallback: document.querySelector("#copy-fallback"),
     copyFallbackText: document.querySelector("#copy-fallback-text"),
   };
@@ -96,12 +97,59 @@ document.addEventListener("DOMContentLoaded", () => {
     if (elements.statusMessage) elements.statusMessage.textContent = message;
   }
 
+  // Shareable filtered views: current filter state lives in the query
+  // string (independent of the #latest/#sources/#monitors hash routing),
+  // so copying the address bar reproduces the same view for whoever opens
+  // it. Only include a param when it differs from the default, so a link
+  // with nothing special selected has no query string at all.
+  function syncUrlFromState() {
+    const params = new URLSearchParams();
+    if (state.search) params.set("q", state.search);
+    if (state.selectedMonitors.size > 0) params.set("monitors", Array.from(state.selectedMonitors).join(","));
+    if (state.selectedFeedSources.size > 0) params.set("sources", Array.from(state.selectedFeedSources).join(","));
+    if (state.contentType !== "all") params.set("type", state.contentType);
+    if (state.time !== "24h") params.set("time", state.time);
+
+    const query = params.toString();
+    const url = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
+    window.history.replaceState(null, "", url);
+  }
+
+  // Runs once, right after data.json loads (needs state.data.monitors/
+  // sources to validate IDs against) and before the first render — so
+  // opening a shared link reproduces its filters immediately, not after
+  // an extra click.
+  function applyStateFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const validMonitorIds = new Set((state.data.monitors || []).map((m) => m.id));
+    const validSourceIds = new Set((state.data.sources || []).map((s) => s.id));
+
+    if (params.has("q")) state.search = params.get("q");
+    if (params.has("monitors")) {
+      state.selectedMonitors = new Set(params.get("monitors").split(",").filter((id) => validMonitorIds.has(id)));
+    }
+    if (params.has("sources")) {
+      state.selectedFeedSources = new Set(
+        params.get("sources").split(",").filter((id) => validSourceIds.has(id))
+      );
+    }
+    if (params.has("type")) state.contentType = params.get("type");
+    if (params.has("time")) state.time = params.get("time");
+
+    if (elements.searchInput) elements.searchInput.value = state.search;
+    if (elements.timeSelect) elements.timeSelect.value = state.time;
+    elements.contentTabs?.querySelectorAll("[data-content-type]").forEach((tab) => {
+      tab.setAttribute("aria-selected", String(tab.dataset.contentType === state.contentType));
+    });
+  }
+
   async function loadData({ isRefresh = false } = {}) {
     announce(isRefresh ? "Refreshing…" : "Loading media monitor data…");
     try {
       const response = await fetch(`data.json?t=${Date.now()}`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       state.data = await response.json();
+      if (!isRefresh) applyStateFromUrl();
       renderAll();
       announce(isRefresh ? "Refreshed." : "Loaded.");
     } catch (error) {
@@ -142,6 +190,20 @@ document.addEventListener("DOMContentLoaded", () => {
     return groups;
   }
 
+  function byName(a, b) {
+    return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" });
+  }
+
+  /** groupBy()'s Map, as [groupLabel, items] entries sorted alphabetically
+   * by group label — every filter/subfilter panel orders both its groups
+   * and the items within them alphabetically, so the sidebar is always
+   * scannable regardless of config file order. */
+  function sortedGroupEntries(groups, labelFn = (key) => key) {
+    return Array.from(groups.entries())
+      .map(([key, items]) => [key, labelFn(key), [...items].sort(byName)])
+      .sort((a, b) => a[1].localeCompare(b[1], undefined, { numeric: true, sensitivity: "base" }));
+  }
+
   function renderMonitorChips() {
     if (!state.data || !elements.monitorChips) return;
     const monitors = state.data.monitors || [];
@@ -159,9 +221,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const groups = groupBy(monitors, (m) => m.group || "General");
     elements.monitorChips.innerHTML =
       "<legend>Monitors</legend>" +
-      Array.from(groups.entries())
+      sortedGroupEntries(groups)
         .map(
-          ([groupName, groupMonitors]) => `
+          ([groupName, , groupMonitors]) => `
         <details class="mm-facet-group">
           <summary>${escapeHtml(groupName)} <span class="app-help-text" data-group-count="${escapeHtml(groupName)}"></span></summary>
           <ul class="search-facet-list">
@@ -187,6 +249,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const id = checkbox.dataset.monitorId;
         if (checkbox.checked) state.selectedMonitors.add(id);
         else state.selectedMonitors.delete(id);
+        syncUrlFromState();
         renderFeed();
       });
     });
@@ -205,14 +268,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     elements.feedSourceFilter.innerHTML =
       "<legend>Sources</legend>" +
-      CONTENT_TYPE_GROUP_ORDER.filter((key) => groups.has(key))
-        .map((key) => {
-          const groupSources = [...groups.get(key)].sort((a, b) =>
-            a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" })
-          );
+      sortedGroupEntries(groups, (key) => CONTENT_TYPE_GROUP_LABELS[key] || key)
+        .map(([key, label, groupSources]) => {
           return `
         <details class="mm-facet-group">
-          <summary>${escapeHtml(CONTENT_TYPE_GROUP_LABELS[key])} <span class="app-help-text" data-content-type-count="${key}"></span></summary>
+          <summary>${escapeHtml(label)} <span class="app-help-text" data-content-type-count="${key}"></span></summary>
           <ul class="search-facet-list">
             ${groupSources
               .map((source) => {
@@ -237,6 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const id = checkbox.dataset.feedSourceId;
         if (checkbox.checked) state.selectedFeedSources.add(id);
         else state.selectedFeedSources.delete(id);
+        syncUrlFromState();
         renderFeed();
       });
     });
@@ -317,10 +378,25 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Google's public favicon service — free, no key, works across every
+  // outlet without this app needing to fetch/host icons itself. Derived
+  // from sourceUrl (the outlet's homepage), not item.url, so Google News
+  // items (whose url is a redirect page) still get the real publisher's
+  // icon.
+  function faviconUrl(item) {
+    try {
+      const hostname = new URL(item.sourceUrl).hostname;
+      return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=32`;
+    } catch {
+      return null;
+    }
+  }
+
   function renderCard(item) {
     const date = new Date(item.publishedAt);
     const heading = item.title || item.text?.slice(0, 120) || item.source;
     const showSeparateSnippet = item.title && item.text;
+    const favicon = faviconUrl(item);
 
     return (
       `<li class="app-card mm-card">` +
@@ -329,12 +405,15 @@ document.addEventListener("DOMContentLoaded", () => {
       `<div class="mm-card__meta">` +
       `<span class="app-badge">${escapeHtml(PLATFORM_LABELS[item.platform] || item.platform)}</span>` +
       `</div>` +
-      `<h3 class="mm-card__title"><a href="${escapeHtml(item.url)}" target="_blank" rel="noreferrer">${escapeHtml(heading)}</a></h3>` +
+      `<h3 class="mm-card__title">` +
+      `<a href="${escapeHtml(item.url)}" target="_blank" rel="noreferrer">${escapeHtml(heading)}</a></h3>` +
       `<p class="mm-card__byline">` +
       `<time datetime="${date.toISOString()}" title="${escapeHtml(date.toLocaleString())}">${escapeHtml(
         date.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
       )}</time>` +
-      ` — <span class="mm-card__source">${
+      ` — ` +
+      (favicon ? `<img class="mm-card__favicon" src="${escapeHtml(favicon)}" alt="" loading="lazy">` : "") +
+      `<span class="mm-card__source">${
         item.sourceUrl
           ? `<a href="${escapeHtml(item.sourceUrl)}" target="_blank" rel="noreferrer">${escapeHtml(item.source)}</a>`
           : escapeHtml(item.source)
@@ -428,9 +507,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const groups = groupBy(sources, (s) => s.type);
     elements.sourceFilter.innerHTML =
       "<legend>Filter by source</legend>" +
-      Array.from(groups.entries())
-        .map(([type, groupSources]) => {
-          const groupLabel = SOURCE_TYPE_LABELS[type] || type;
+      sortedGroupEntries(groups, (type) => SOURCE_TYPE_LABELS[type] || type)
+        .map(([, groupLabel, groupSources]) => {
           return `
         <details class="mm-facet-group">
           <summary>${escapeHtml(groupLabel)} <span class="app-help-text">(${groupSources.length})</span></summary>
@@ -614,9 +692,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const monitors = state.data.monitors || [];
     const groups = groupBy(monitors, (m) => m.group || "General");
 
-    elements.monitorsList.innerHTML = Array.from(groups.entries())
+    elements.monitorsList.innerHTML = sortedGroupEntries(groups)
       .map(
-        ([groupName, groupMonitors]) => `
+        ([groupName, , groupMonitors]) => `
       <section class="mm-monitor-group">
         <h3>${escapeHtml(groupName)}</h3>
         ${groupMonitors
@@ -667,11 +745,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const TAG_EMOJI = "\u{1F3F7}\u{FE0F}"; // 🏷️
   const TITLE_EMOJI = "\u{1F7E2}"; // 🟢
 
+  function digestMonitorsLine() {
+    if (state.selectedMonitors.size === 0) return "";
+    const names = state.data.monitors
+      .filter((m) => state.selectedMonitors.has(m.id))
+      .map((m) => m.name);
+    return `${TAG_EMOJI} Monitors: ${names.join(", ")}`;
+  }
+
   function buildDigest(items) {
     const now = new Date();
     const generatedDate = now.toLocaleString([], { month: "short", day: "numeric", year: "numeric" });
     const headerLine1 = `${DIGEST_EMOJI} Marin Media Monitor — ${generatedDate}`;
     const headerLine2 = `${COUNT_EMOJI} ${items.length} mention${items.length === 1 ? "" : "s"} ${digestRangeLabel(items)}`;
+    const monitorsLine = digestMonitorsLine();
 
     const textBlocks = items.map((item) => {
       const heading = item.title || item.text?.slice(0, 120) || item.source;
@@ -688,7 +775,9 @@ document.addEventListener("DOMContentLoaded", () => {
       lines.push(item.url);
       return lines.join("\n");
     });
-    const text = [headerLine1, headerLine2, "", textBlocks.join("\n\n")].join("\n");
+    const text = [headerLine1, headerLine2, ...(monitorsLine ? [monitorsLine] : []), "", textBlocks.join("\n\n")].join(
+      "\n"
+    );
 
     // Gmail/Outlook/etc. paste-sanitizers routinely strip inline margin/
     // padding from pasted HTML, which silently ate the spacing here before
@@ -715,7 +804,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     const htmlHeaderLine1 = `${DIGEST_EMOJI} Marin Media Monitor — <i>${escapeHtml(generatedDate)}</i>`;
     const html =
-      `<div><b>${htmlHeaderLine1}</b><br>${escapeHtml(headerLine2)}<br><br>` +
+      `<div><b>${htmlHeaderLine1}</b><br>${escapeHtml(headerLine2)}` +
+      `${monitorsLine ? `<br>${escapeHtml(monitorsLine)}` : ""}<br><br>` +
       `${htmlBlocks.join("<br><br>")}</div>`;
 
     return { text, html };
@@ -774,7 +864,34 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function copyCurrentLink() {
+    const url = window.location.href;
+    if (elements.copyFallback) elements.copyFallback.hidden = true;
+
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard
+        .writeText(url)
+        .then(() => announce("Copied link to clipboard."))
+        .catch(() => {
+          showCopyFallback(url);
+          announce("Couldn't copy automatically — select the text below and copy it manually.");
+        });
+      return;
+    }
+
+    try {
+      const copied = copyRichTextToClipboard(url);
+      if (!copied) throw new Error("execCommand(\"copy\") returned false");
+      announce("Copied link to clipboard.");
+    } catch (error) {
+      console.error(error);
+      showCopyFallback(url);
+      announce("Couldn't copy automatically — select the text below and copy it manually.");
+    }
+  }
+
   elements.copyEmailButton?.addEventListener("click", copyDigestToClipboard);
+  elements.copyLinkButton?.addEventListener("click", copyCurrentLink);
 
   // Delegated: #media-feed's cards are fully re-rendered on every filter
   // change, so listeners are attached once here rather than per-card.
@@ -791,16 +908,24 @@ document.addEventListener("DOMContentLoaded", () => {
     elements.contentTabs.querySelectorAll("[data-content-type]").forEach((tab) => {
       tab.setAttribute("aria-selected", String(tab === button));
     });
+    syncUrlFromState();
     renderFeed();
   });
 
+  let searchUrlSyncTimer;
   elements.searchInput?.addEventListener("input", () => {
     state.search = elements.searchInput.value.trim();
+    // Debounced: this fires on every keystroke, and replaceState() on
+    // every one of them is wasted work renderFeed() doesn't need to wait
+    // on — the URL just needs to catch up shortly after typing settles.
+    clearTimeout(searchUrlSyncTimer);
+    searchUrlSyncTimer = setTimeout(syncUrlFromState, 300);
     renderFeed();
   });
 
   elements.timeSelect?.addEventListener("change", () => {
     state.time = elements.timeSelect.value;
+    syncUrlFromState();
     renderFeed();
   });
 
@@ -826,6 +951,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // to closed the same way they start on first load.
     renderMonitorChips();
     renderFeedSourceFilter();
+    syncUrlFromState();
     renderFeed();
     announce("Filters reset.");
   }

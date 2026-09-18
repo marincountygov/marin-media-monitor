@@ -33,6 +33,8 @@ monitors:
     include:
       - Marin County
       - County of Marin
+      - Marin Co.
+      - Marin agencies
     exclude:
       - Marin County Florida
       - Marin County, Florida
@@ -84,13 +86,6 @@ monitors:
     group: Departments
     include:
       - Marin Office of Emergency Management
-
-  - id: alert-marin
-    name: AlertMarin
-    group: Departments
-    include:
-      - AlertMarin
-      - Alert Marin
 
   - id: marin-county-counsel
     name: Marin County Counsel
@@ -189,6 +184,8 @@ monitors:
       - Marin County Health and Human Services
       - Marin Health and Human Services
       - Marin HHS
+      - Marin County Department of Health and Human Services
+      - Marin County HHS
 
   - id: marin-hr
     name: Marin County Human Resources
@@ -216,6 +213,7 @@ monitors:
     include:
       - Marin County Parks
       - Marin County Parks and Open Space
+      - Parks and Open Space Commission
 
   - id: marin-probation
     name: Marin County Probation
@@ -265,14 +263,29 @@ monitors:
       - Marin Transit
       - Marin Transit District
 
-  # --- Events & Places ---
+  # --- Services ---
   - id: fixitmarin
     name: FixItMarin
-    group: Events & Places
+    group: Services
     include:
       - FixItMarin
       - Fix It Marin
 
+  - id: alert-marin
+    name: AlertMarin
+    group: Services
+    include:
+      - AlertMarin
+      - Alert Marin
+
+  - id: readymarin
+    name: ReadyMarin
+    group: Services
+    include:
+      - ReadyMarin
+      - Ready Marin
+
+  # --- Events & Places ---
   - id: marin-county-fair
     name: Marin County Fair
     group: Events & Places
@@ -310,6 +323,7 @@ monitors:
       - Marin County flooding
       - Marin flooding
       - flooding in Marin
+      - Marin El Niño
 
   - id: marin-officials
     name: Marin County Officials
@@ -326,24 +340,91 @@ monitors:
       - Marin budget
 
   # --- People ---
-  - id: people
-    name: People
+  # One monitor per person (not one "People" monitor with everyone lumped
+  # in) so the sidebar's People group can filter down to a single person.
+  # Bare full names, not "Supervisor <name>" — substring matching means the
+  # bare name already catches "Supervisor Mary Sackett" too, and also
+  # catches headlines that drop the title.
+  - id: derek-johnson
+    name: Derek Johnson
     group: People
     include:
-      # Bare full names, not "Supervisor <name>" — substring matching means
-      # the bare name already catches "Supervisor Mary Sackett" too, and
-      # also catches headlines that drop the title.
       - Derek Johnson
+
+  - id: mary-sackett
+    name: Mary Sackett
+    group: People
+    include:
       - Mary Sackett
+
+  - id: brian-colbert
+    name: Brian Colbert
+    group: People
+    include:
       - Brian Colbert
+
+  - id: stephanie-moulton-peters
+    name: Stephanie Moulton-Peters
+    group: People
+    include:
       - Stephanie Moulton-Peters
+
+  - id: dennis-rodoni
+    name: Dennis Rodoni
+    group: People
+    include:
       - Dennis Rodoni
+
+  - id: eric-lucan
+    name: Eric Lucan
+    group: People
+    include:
       - Eric Lucan
+
+  - id: linn-walsh
+    name: Linn Walsh
+    group: People
+    include:
       - Linn Walsh
+
+  - id: crosby-burns
+    name: Crosby Burns
+    group: People
+    include:
       - Crosby Burns
+
+  - id: laine-hendricks
+    name: Laine Hendricks
+    group: People
+    include:
       - Laine Hendricks
+
+  - id: lisa-warhuus
+    name: Lisa Warhuus
+    group: People
+    include:
       - Lisa Warhuus
+
+  - id: josh-swedberg
+    name: Josh Swedberg
+    group: People
+    include:
       - Josh Swedberg
+
+  - id: jamie-scardina
+    name: Jamie Scardina
+    group: People
+    include:
       - Jamie Scardina
+
+  - id: sylvia-moir
+    name: Sylvia Moir
+    group: People
+    include:
       - Sylvia Moir
+
+  - id: jason-weber
+    name: Jason Weber
+    group: People
+    include:
       - Jason Weber
