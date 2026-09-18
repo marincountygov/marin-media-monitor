@@ -101,8 +101,12 @@ async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
     apiKey: env.YOUTUBE_API_KEY,
     clientId: env.REDDIT_CLIENT_ID,
     clientSecret: env.REDDIT_CLIENT_SECRET,
+    redditUsername: env.REDDIT_USERNAME,
+    redditPassword: env.REDDIT_PASSWORD,
+    blueskyHandle: env.BLUESKY_HANDLE,
+    blueskyPassword: env.BLUESKY_APP_PASSWORD,
   };
-
+  
   const health = [];
   const allItems = [];
 
