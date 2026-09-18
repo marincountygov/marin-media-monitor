@@ -1,0 +1,550 @@
+# Source configuration for marin-media-monitor.
+#
+# type: "rss" | "google-news" | "youtube" | "youtube-rss" | "bluesky" | "reddit" | "nextdoor"
+#
+# "youtube" = keyword search via the YouTube Data API (needs YOUTUBE_API_KEY,
+# costs quota). "youtube-rss" = a channel's own free Atom feed at
+# https://www.youtube.com/feeds/videos.xml?channel_id=<channelId> — no key,
+# no quota, just needs a verified channelId.
+# region is free-form and only used for grouping/display on /sources.
+#
+# Every "rss" entry below was hand-verified with a direct HTTP request
+# (curl, with a real User-Agent) on 2026-09-17: confirmed HTTP 200, valid
+# RSS/Atom, and item pubDates from the same day. See README.md
+# "Verified sources" for the full log, including which candidate outlets
+# were rejected and why.
+#
+# Outlets that returned 401/403/404 to a direct fetch (usually Cloudflare/
+# Akamai bot protection, not a missing feed) are NOT listed as "rss" here —
+# they are covered instead by a "google-news" entry with a site: query, per
+# the plan's fallback rule: never scrape, always fall back to Google News.
+
+sources:
+  # --- San Francisco and regional ---
+  - id: sfgate
+    name: SFGATE
+    type: rss
+    region: bay-area
+    url: https://www.sfgate.com/bayarea/feed/bay-area-news-429.php
+    enabled: true
+
+  - id: sf-standard
+    name: San Francisco Standard
+    type: rss
+    region: san-francisco
+    url: https://sfstandard.com/feed/
+    enabled: true
+
+  - id: mission-local
+    name: Mission Local
+    type: rss
+    region: san-francisco
+    url: https://missionlocal.org/feed/
+    enabled: true
+
+  - id: sfist
+    name: SFist
+    type: rss
+    region: san-francisco
+    url: https://sfist.com/rss/
+    enabled: true
+
+  - id: 48hills
+    name: 48 Hills
+    type: rss
+    region: san-francisco
+    url: https://48hills.org/feed/
+    enabled: true
+
+  - id: bay-area-reporter
+    name: Bay Area Reporter
+    type: google-news
+    region: san-francisco
+    query: site:ebar.com
+    enabled: true
+    note: Direct feed returns HTTP 403 (bot-protected); using Google News fallback.
+
+  - id: local-news-matters
+    name: Local News Matters / Bay City News
+    type: rss
+    region: bay-area
+    url: https://localnewsmatters.org/feed/
+    enabled: true
+
+  - id: abc7-bay-area
+    name: ABC7 Bay Area / KGO
+    type: rss
+    region: bay-area
+    url: https://abc7news.com/feed/
+    enabled: true
+
+  - id: kron4
+    name: KRON4
+    type: rss
+    region: bay-area
+    url: https://www.kron4.com/feed/
+    enabled: true
+
+  - id: ktvu
+    name: KTVU FOX 2
+    type: google-news
+    region: bay-area
+    query: site:ktvu.com
+    enabled: true
+    note: No public RSS endpoint found; using Google News fallback.
+
+  - id: nbc-bay-area
+    name: NBC Bay Area
+    type: rss
+    region: bay-area
+    url: "https://www.nbcbayarea.com/?rss=y"
+    enabled: true
+
+  - id: cbs-bay-area
+    name: CBS News Bay Area / KPIX
+    type: google-news
+    region: bay-area
+    query: site:cbsnews.com/sanfrancisco
+    enabled: true
+    note: No public RSS endpoint found; using Google News fallback.
+
+  - id: kqed
+    name: KQED
+    type: rss
+    region: bay-area
+    url: https://ww2.kqed.org/news/feed/
+    enabled: true
+
+  # --- East Bay ---
+  - id: berkeleyside
+    name: Berkeleyside
+    type: rss
+    region: east-bay
+    url: https://www.berkeleyside.org/feed
+    enabled: true
+
+  - id: oaklandside
+    name: The Oaklandside
+    type: rss
+    region: east-bay
+    url: https://oaklandside.org/feed
+    enabled: true
+
+  - id: richmondside
+    name: Richmondside
+    type: rss
+    region: east-bay
+    url: https://richmondside.org/feed/
+    enabled: true
+
+  - id: east-bay-express
+    name: East Bay Express
+    type: rss
+    region: east-bay
+    url: https://eastbayexpress.com/feed/
+    enabled: true
+
+  - id: berkeley-scanner
+    name: Berkeley Scanner
+    type: rss
+    region: east-bay
+    url: https://www.berkeleyscanner.com/rss/
+    enabled: true
+
+  - id: east-bay-times
+    name: East Bay Times
+    type: google-news
+    region: east-bay
+    query: site:eastbaytimes.com
+    enabled: true
+    note: Direct feed returns HTTP 403 (bot-protected); using Google News fallback.
+
+  # --- Peninsula and South Bay ---
+  - id: san-jose-spotlight
+    name: San José Spotlight
+    type: rss
+    region: south-bay
+    url: https://sanjosespotlight.com/feed/
+    enabled: true
+
+  - id: palo-alto-online
+    name: Palo Alto Online
+    type: rss
+    region: peninsula
+    url: https://www.paloaltoonline.com/feed/
+    enabled: true
+
+  - id: mountain-view-voice
+    name: Mountain View Voice
+    type: rss
+    region: peninsula
+    url: https://www.mv-voice.com/feed/
+    enabled: true
+
+  - id: the-six-fifty
+    name: The Six Fifty
+    type: google-news
+    region: peninsula
+    query: site:paloaltoonline.com "the six fifty"
+    enabled: true
+    note: >-
+      No longer a standalone feed — folded into Palo Alto Online's "The 650"
+      section. Using a scoped Google News query rather than a fabricated
+      direct feed.
+
+  - id: mercury-news
+    name: Mercury News
+    type: google-news
+    region: south-bay
+    query: site:mercurynews.com
+    enabled: true
+    note: Direct feed returns HTTP 403 (bot-protected); using Google News fallback.
+
+  # --- Marin and North Bay (priority) ---
+  - id: marin-ij
+    name: Marin Independent Journal
+    type: google-news
+    region: marin
+    query: site:marinij.com
+    enabled: true
+    note: Direct feed returns HTTP 403 (bot-protected); using Google News fallback.
+
+  - id: pacific-sun
+    name: Pacific Sun
+    type: rss
+    region: marin
+    url: https://pacificsun.com/feed/
+    enabled: true
+
+  - id: marin-post
+    name: Marin Post
+    type: google-news
+    region: marin
+    query: site:marinpost.org
+    enabled: true
+    note: Direct feed returns HTTP 401 (auth-walled); using Google News fallback.
+
+  - id: point-reyes-light
+    name: Point Reyes Light
+    type: rss
+    region: marin
+    url: https://www.ptreyeslight.com/feed/
+    enabled: true
+
+  - id: press-democrat
+    name: Press Democrat
+    type: google-news
+    region: north-bay
+    query: site:pressdemocrat.com
+    enabled: true
+    note: Direct feed returns HTTP 403 (bot-protected); using Google News fallback.
+
+  - id: north-bay-business-journal
+    name: North Bay Business Journal
+    type: google-news
+    region: north-bay
+    query: site:northbaybusinessjournal.com OR site:pressdemocrat.com "North Bay Business Journal"
+    enabled: true
+    note: Redirects into pressdemocrat.com, which is bot-protected (403); using Google News fallback.
+
+  - id: sonoma-index-tribune
+    name: Sonoma Index-Tribune
+    type: google-news
+    region: north-bay
+    query: site:sonomanews.com
+    enabled: true
+    note: Direct feed returns HTTP 403 (bot-protected); using Google News fallback.
+
+  - id: sonoma-county-gazette
+    name: Sonoma County Gazette
+    type: google-news
+    region: north-bay
+    query: site:sonomacountygazette.com
+    enabled: true
+    note: Direct feed returns HTTP 403 (bot-protected); using Google News fallback.
+
+  - id: napa-valley-register
+    name: Napa Valley Register
+    type: rss
+    region: north-bay
+    url: "https://napavalleyregister.com/search/?f=rss&t=article"
+    enabled: true
+    refreshIntervalMinutes: 30
+    note: >-
+      Lee Enterprises' search-based feed endpoint rate-limits aggressively
+      (observed HTTP 429 during verification); a longer interval reduces
+      how often that happens. A transient 429 falls back to the previous
+      snapshot's items, not an empty result.
+
+  - id: marin-county-confidential
+    name: Marin County Confidential
+    type: rss
+    region: marin
+    url: https://marincountyconfidential.substack.com/feed
+    enabled: true
+    note: Posts irregularly (weeks between issues sometimes) — a quiet Sources page entry is expected, not a failure.
+
+  - id: marinscope
+    name: Marinscope Community Newspapers
+    type: rss
+    region: marin
+    url: https://shermanf.substack.com/feed
+    enabled: true
+
+  - id: marin-lately
+    name: Marin Lately
+    type: rss
+    region: marin
+    url: https://marinlately.substack.com/feed
+    enabled: true
+    note: Latest post is from January 2026 — feed is valid but appears dormant; expect a quiet Sources page entry.
+
+  - id: cuppa-sophie-davies
+    name: CUPPA with Sophie Davies
+    type: rss
+    region: bay-area
+    url: https://britishsophiedavies.substack.com/feed
+    enabled: true
+
+  - id: citeline-news
+    name: CiteLine News
+    type: rss
+    region: east-bay
+    url: https://citeline.substack.com/feed
+    enabled: true
+
+  - id: east-bay-insiders
+    name: East Bay Insiders
+    type: rss
+    region: east-bay
+    url: https://eastbayinsiders.substack.com/feed
+    enabled: true
+
+  - id: rajni-mandal-public-safety
+    name: Rajni Mandal's Public Safety Updates
+    type: rss
+    region: east-bay
+    url: https://rajnimandal.substack.com/feed
+    enabled: true
+
+  - id: local-california
+    name: Local California
+    type: rss
+    region: california
+    url: https://localcalifornia.substack.com/feed
+    enabled: true
+
+  - id: silicon-valley-life
+    name: This Is Your Life in Silicon Valley
+    type: rss
+    region: south-bay
+    url: https://siliconvalley.substack.com/feed
+    enabled: true
+    note: Latest post is from May 2026 — feed is valid but appears dormant; expect a quiet Sources page entry.
+
+  - id: marin-magazine
+    name: Marin Magazine
+    type: rss
+    region: marin
+    url: https://marinmagazine.com/feed/
+    enabled: true
+
+  # --- YouTube channels (free per-channel RSS feed, no API key/quota) ---
+  # channelId values verified 2026-09-17: fetched
+  # https://www.youtube.com/feeds/videos.xml?channel_id=<id> directly and
+  # confirmed a recent <entry>.
+  - id: kqed-youtube
+    name: KQED (YouTube)
+    type: youtube-rss
+    region: bay-area
+    channelId: UCeC0IOo7i1P_61zVUWbJ4nw
+    enabled: true
+    costCategory: free
+
+  - id: abc7-youtube
+    name: ABC7 Bay Area (YouTube)
+    type: youtube-rss
+    region: bay-area
+    channelId: UCYUbNjkuE4lsr2v1Id2O1oA
+    enabled: true
+    costCategory: free
+
+  - id: ktvu-youtube
+    name: KTVU (YouTube)
+    type: youtube-rss
+    region: bay-area
+    channelId: UCVhtkN7-c8mA8GXEoxS4YQw
+    enabled: true
+    costCategory: free
+
+  - id: kron4-youtube
+    name: KRON4 (YouTube)
+    type: youtube-rss
+    region: bay-area
+    channelId: UCVWQWc8PXy6Itt7YNrivOYw
+    enabled: true
+    costCategory: free
+
+  - id: nbc-bay-area-youtube
+    name: NBC Bay Area (YouTube)
+    type: youtube-rss
+    region: bay-area
+    channelId: UCmKKVuZrBfSGiuvtOuipoDA
+    enabled: true
+    costCategory: free
+
+  - id: cbs-bay-area-youtube
+    name: CBS News Bay Area (YouTube)
+    type: youtube-rss
+    region: bay-area
+    channelId: UCF4LEacx9sDvAbEJnlaJfKQ
+    enabled: true
+    costCategory: free
+
+  - id: sfgate-youtube
+    name: SFGATE (YouTube)
+    type: youtube-rss
+    region: san-francisco
+    channelId: UCUPLre1l3r9Y17BE55KuUTA
+    enabled: true
+    costCategory: free
+
+  - id: sf-standard-youtube
+    name: San Francisco Standard (YouTube)
+    type: youtube-rss
+    region: san-francisco
+    channelId: UCvGYKT0VYr_tiiWOcrwoVLg
+    enabled: true
+    costCategory: free
+
+  - id: marin-county-youtube
+    name: County of Marin (YouTube)
+    type: youtube-rss
+    region: marin
+    channelId: UCAKBLAHslCeHRgyb1IVrcjw
+    enabled: true
+    costCategory: free
+    note: >-
+      Resolved from https://www.youtube.com/user/maringchannel — confirmed
+      via the page's canonical link and externalId (channel is real,
+      active, has Videos/Shorts). The videos.xml feed itself returned 404
+      during verification, but so did every other already-working channel
+      feed in this file when re-checked at the same time — this project's
+      own network has been rate-limited by YouTube from a full day of
+      testing, not a sign this feed doesn't exist. Re-check /sources after
+      this has had time to cool down or once the scheduled build runs.
+
+  # --- Google News discovery (not tied to one outlet) ---
+  - id: google-news-marin-county
+    name: "Google News: Marin County"
+    type: google-news
+    region: marin
+    query: '"Marin County"'
+    enabled: true
+
+  - id: google-news-marin-civic-center
+    name: "Google News: Marin Civic Center"
+    type: google-news
+    region: marin
+    query: '"Marin Civic Center" OR "Marin County Civic Center"'
+    enabled: true
+
+  - id: patch-marin
+    name: Patch.com (Marin)
+    type: google-news
+    region: marin
+    query: site:patch.com "Marin County"
+    enabled: true
+    note: >-
+      No RSS feed found (Next.js SPA, no exposed feed at any guessed
+      path), and Patch's robots.txt explicitly disallows anthropic-ai —
+      using Google News rather than a direct connector, out of respect
+      for that and because there's nothing to fetch anyway. Confirmed
+      active Marin-area Patch towns: San Rafael, Novato, Mill Valley,
+      Sausalito, Tiburon, Marin City, Fairfax.
+
+  - id: kwmr
+    name: KWMR-FM
+    type: google-news
+    region: marin
+    query: site:kwmr.org
+    enabled: true
+    note: >-
+      kwmr.org has no real RSS feed — its "/feed/" route returns the
+      site's Nuxt.js SPA shell (HTTP 200, but no <item> elements at all),
+      not XML, and there's no feed-discovery link on the homepage either.
+      Using Google News fallback. Expect sparse results; it's a small
+      community radio station, not primarily a text-news outlet.
+
+  - id: marincounty-gov
+    name: County of Marin (marincounty.gov)
+    type: google-news
+    region: marin
+    query: site:marincounty.gov
+    enabled: true
+    note: >-
+      No usable RSS feed found. The site is behind the same Cloudflare
+      protection blocking other marincounty.gov paths in this project
+      (403 on every guessed feed path); its GovDelivery notification
+      account ("CAMARIN") returns 406 on the account-wide bulletins.rss
+      endpoint (likely needs a topic-specific ID this guess doesn't have);
+      and no feed-discovery link is exposed on the news-releases page.
+      Using Google News fallback for official county press releases.
+
+  # --- Free APIs ---
+  - id: youtube
+    name: YouTube
+    type: youtube
+    region: bay-area
+    enabled: true
+    costCategory: free-quota
+    refreshIntervalMinutes: 60
+    note: >-
+      search.list costs 100 quota units/call against a 10,000/day default
+      quota. One combined query across all monitors, refreshed hourly
+      (24 calls/day = 2,400 units/day), leaves headroom instead of risking
+      quota exhaustion. See README.md "YouTube" for the cost model.
+
+  - id: bluesky
+    name: Bluesky
+    type: bluesky
+    region: bay-area
+    enabled: false
+    costCategory: free
+    note: >-
+      Disabled 2026-09-18: Bluesky's unauthenticated searchPosts endpoint
+      (tried both public.api.bsky.app and api.bsky.app) returned HTTP 403
+      consistently from multiple machines/networks, not just one blocked
+      sandbox. build/connectors/bluesky.js is otherwise a working,
+      already-implemented connector — the failure is upstream access, not
+      the code. Re-enable if Bluesky's access policy changes, or add App
+      Password authentication (see README.md "Bluesky") if you want it
+      working sooner.
+
+  - id: reddit
+    name: Reddit
+    type: reddit
+    region: bay-area
+    enabled: true
+    costCategory: free-with-limits
+    note: >-
+      Covers r/bayarea, r/sanfrancisco, r/Marin, r/oakland, r/berkeley,
+      r/SanJose (see build/connectors/reddit.js). Needs REDDIT_CLIENT_ID /
+      REDDIT_CLIENT_SECRET secrets to actually pull anything — without
+      them this shows "error" on /sources, same as youtube without
+      YOUTUBE_API_KEY. Reddit's Data API caps free-tier use at 100
+      queries/minute per OAuth client, workable for a poll every 10-15
+      minutes; higher-volume/commercial use needs a paid contract. See
+      README.md "Reddit" section.
+
+  - id: nextdoor
+    name: Nextdoor
+    type: nextdoor
+    region: bay-area
+    enabled: false
+    costCategory: approval-required
+    note: >-
+      Nextdoor has no public, self-serve content/search API. Its published
+      APIs (Creator/Ads, Local Deals) don't cover keyword monitoring of
+      neighborhood posts. Left disabled with a connector stub — see
+      README.md "Nextdoor" section for what activation would require.

@@ -1,0 +1,24 @@
+{
+  "name": "marin-media-monitor",
+  "version": "0.1.0",
+  "description": "A stateless media-monitoring console for Bay Area news, video, and social mentions of configurable keywords/phrases. No database — a scheduled build fetches sources, matches monitors, and writes a static data.json for the site to read.",
+  "private": true,
+  "main": "build/index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "build": "node build/index.js",
+    "dev": "node build/index.js --out=data.json --previous=data.json",
+    "test": "node tests/run.js"
+  },
+  "keywords": ["media-monitoring", "rss", "google-news", "bay-area", "marin"],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "fast-xml-parser": "^5.11.1",
+    "js-yaml": "^4.1.0"
+  }
+}

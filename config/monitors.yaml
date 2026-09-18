@@ -1,0 +1,349 @@
+# Monitor configuration for marin-media-monitor.
+#
+# Each monitor is a named set of include/exclude phrases. Matching is
+# case-insensitive and normalizes whitespace/punctuation (see
+# build/match.js) — it is deliberately simple string/phrase matching, not
+# NLP. A monitor matches an item if ANY include entry is found and NO
+# exclude entry is found.
+#
+# An include/exclude entry is usually a single phrase (a string). It can
+# also be a list of phrases, meaning ALL of them must be present (an AND
+# clause) — for a term too generic to use alone:
+#   - [word:MCA, Marin]   # matches only if BOTH "MCA" and "Marin" appear
+#
+# A "word:" prefix on any single term (standalone or inside an AND clause)
+# matches that term as a whole word only, not as a substring of a longer
+# word — e.g. word:MCA matches "MCA" but not "MCAL" (a real false positive
+# found in production: the Marin County Athletic League). Plain terms
+# without the prefix keep the default substring behavior, which several
+# other monitors rely on (e.g. "Marin Fire" matching "Marin Fire
+# Department").
+#
+# `group` is UI-only — it controls how monitors are grouped in the
+# Console's sidebar and on /monitors (see assets/app.js's MONITOR_GROUPS
+# order). It has no effect on matching.
+#
+# Add a new monitor by adding an entry here.
+
+monitors:
+  # --- General ---
+  - id: marin-county
+    name: Marin County
+    group: General
+    include:
+      - Marin County
+      - County of Marin
+    exclude:
+      - Marin County Florida
+      - Marin County, Florida
+
+  - id: civic-center
+    name: Marin Civic Center
+    group: General
+    include:
+      - Marin Civic Center
+      - Marin County Civic Center
+
+  - id: marin-center
+    name: Marin Center
+    group: General
+    include:
+      - Marin Center
+      - Marin Showcase Theater
+      - Marin Exhibit Hall
+      - Marin Veterans' Memorial Auditorium
+
+  # --- Board & Courts ---
+  - id: marin-supervisors
+    name: Marin Board of Supervisors
+    group: Board & Courts
+    include:
+      - Marin Board of Supervisors
+      - Marin County Board of Supervisors
+      - Marin County supervisor
+
+  - id: marin-superior-court
+    name: Marin County Superior Court
+    group: Board & Courts
+    include:
+      - Marin County Superior Court
+      - Marin Superior Court
+      - Superior Court of Marin County
+
+  - id: marin-grand-jury
+    name: Marin County Civil Grand Jury
+    group: Board & Courts
+    include:
+      - Marin County Civil Grand Jury
+      - Marin Civil Grand Jury
+      - Marin Grand Jury
+
+  # --- Departments ---
+  - id: marin-oem
+    name: Marin Office of Emergency Management
+    group: Departments
+    include:
+      - Marin Office of Emergency Management
+
+  - id: alert-marin
+    name: AlertMarin
+    group: Departments
+    include:
+      - AlertMarin
+      - Alert Marin
+
+  - id: marin-county-counsel
+    name: Marin County Counsel
+    group: Departments
+    include:
+      - Marin County Counsel
+
+  - id: marin-sheriff
+    name: Marin County Sheriff
+    group: Departments
+    include:
+      - Marin County Sheriff
+      - Marin County Sheriff's Office
+      - Marin Sheriff
+
+  - id: marin-fire
+    name: Marin County Fire Department
+    group: Departments
+    include:
+      - Marin County Fire Department
+      - Marin County Fire
+      - Marin Fire
+
+  - id: marin-cda
+    name: Marin County Community Development Agency
+    group: Departments
+    include:
+      - Marin County Community Development Agency
+      - Marin CDA
+
+  - id: marin-ag-weights-measures
+    name: Marin County Agriculture, Weights and Measures
+    group: Departments
+    include:
+      - Marin County Agriculture, Weights and Measures
+      - Marin Agriculture, Weights and Measures
+      - Marin County Weights and Measures
+
+  - id: marin-assessor
+    name: Marin County Assessor-Recorder-County Clerk
+    group: Departments
+    include:
+      - Marin County Assessor-Recorder
+      - Marin County Assessor
+      - Marin County Recorder
+      - Marin County Clerk
+
+  - id: marin-child-support
+    name: Marin County Child Support Services
+    group: Departments
+    include:
+      - Marin County Child Support Services
+      - Marin Child Support Services
+
+  - id: marin-county-executive
+    name: Marin County Executive
+    group: Departments
+    include:
+      - Marin County Executive
+      - Marin County Executive's Office
+
+  - id: marin-cultural-services
+    name: Marin County Cultural Services
+    group: Departments
+    include:
+      - Marin County Cultural Services
+      - Marin Cultural Services
+
+  - id: marin-da
+    name: Marin County District Attorney
+    group: Departments
+    include:
+      - Marin County District Attorney
+      - Marin District Attorney
+      - Marin County DA
+
+  - id: marin-elections
+    name: Marin County Elections
+    group: Departments
+    include:
+      - Marin County Elections
+      - Marin County Registrar of Voters
+      - Marin Registrar of Voters
+
+  - id: marin-finance
+    name: Marin County Finance
+    group: Departments
+    include:
+      - Marin County Department of Finance
+      - Marin County Finance Department
+
+  - id: marin-hhs
+    name: Marin County Health and Human Services
+    group: Departments
+    include:
+      - Marin County Health and Human Services
+      - Marin Health and Human Services
+      - Marin HHS
+
+  - id: marin-hr
+    name: Marin County Human Resources
+    group: Departments
+    include:
+      - Marin County Human Resources
+
+  - id: marin-ist
+    name: Marin County Information Services and Technology
+    group: Departments
+    include:
+      - Marin County Information Services and Technology
+      - Marin County IST
+
+  - id: marin-library
+    name: Marin County Free Library
+    group: Departments
+    include:
+      - Marin County Free Library
+      - Marin County Library
+
+  - id: marin-parks
+    name: Marin County Parks
+    group: Departments
+    include:
+      - Marin County Parks
+      - Marin County Parks and Open Space
+
+  - id: marin-probation
+    name: Marin County Probation
+    group: Departments
+    include:
+      - Marin County Probation
+      - Marin Probation Department
+
+  - id: marin-public-defender
+    name: Marin County Public Defender
+    group: Departments
+    include:
+      - Marin County Public Defender
+      - Marin Public Defender
+
+  - id: marin-public-works
+    name: Marin County Public Works
+    group: Departments
+    include:
+      - Marin County Public Works
+      - Marin Public Works
+
+  - id: marin-retirement
+    name: Marin County Employees' Retirement Association
+    group: Departments
+    include:
+      - Marin County Employees' Retirement Association
+      - MCERA
+
+  - id: marin-tax-collector
+    name: Marin County Tax Collector
+    group: Departments
+    include:
+      - Marin County Tax Collector
+
+  - id: marin-uc-extension
+    name: Marin UC Cooperative Extension
+    group: Departments
+    include:
+      - Marin UC Cooperative Extension
+      - UC Cooperative Extension Marin
+
+  - id: marin-transit
+    name: Marin Transit
+    group: Departments
+    include:
+      - Marin Transit
+      - Marin Transit District
+
+  # --- Events & Places ---
+  - id: fixitmarin
+    name: FixItMarin
+    group: Events & Places
+    include:
+      - FixItMarin
+      - Fix It Marin
+
+  - id: marin-county-fair
+    name: Marin County Fair
+    group: Events & Places
+    include:
+      - Marin County Fair
+      - Marin Fair
+      - Marin Fairgrounds
+
+  - id: marin-farmers-markets
+    name: Marin Farmers Markets
+    group: Events & Places
+    include:
+      - Marin Farmers Market
+      - Marin County Farmers Market
+
+  - id: marin-wildfire-authority
+    name: Marin Wildfire Prevention Authority
+    group: Events & Places
+    include:
+      - Marin Wildfire Prevention Authority
+      - MWPA
+
+  - id: marin-cultural-association
+    name: Marin Cultural Association
+    group: Events & Places
+    include:
+      - Marin Cultural Association
+      - [word:MCA, Marin]
+
+  # --- Topics ---
+  - id: marin-flooding
+    name: Marin County Flooding
+    group: Topics
+    include:
+      - Marin County flooding
+      - Marin flooding
+      - flooding in Marin
+
+  - id: marin-officials
+    name: Marin County Officials
+    group: Topics
+    include:
+      - Marin County officials
+      - Marin officials
+
+  - id: marin-budget
+    name: Marin County Budget
+    group: Topics
+    include:
+      - Marin County budget
+      - Marin budget
+
+  # --- People ---
+  - id: people
+    name: People
+    group: People
+    include:
+      # Bare full names, not "Supervisor <name>" — substring matching means
+      # the bare name already catches "Supervisor Mary Sackett" too, and
+      # also catches headlines that drop the title.
+      - Derek Johnson
+      - Mary Sackett
+      - Brian Colbert
+      - Stephanie Moulton-Peters
+      - Dennis Rodoni
+      - Eric Lucan
+      - Linn Walsh
+      - Crosby Burns
+      - Laine Hendricks
+      - Lisa Warhuus
+      - Josh Swedberg
+      - Jamie Scardina
+      - Sylvia Moir
+      - Jason Weber

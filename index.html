@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Media Monitor | County of Marin</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%23000'/%3E%3Cg fill='none' stroke='%23e5b53b' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='9' width='12' height='12' rx='2'/%3E%3Crect x='27' y='9' width='12' height='12' rx='2'/%3E%3Crect x='9' y='27' width='12' height='12' rx='2'/%3E%3Crect x='27' y='27' width='12' height='12' rx='2'/%3E%3C/g%3E%3C/svg%3E">
+    <meta name="description" content="A live media-monitoring console tracking Bay Area news, video, and social mentions of configured keywords and phrases.">
+    <link rel="stylesheet" href="vendor/pico.min.css">
+    <link rel="stylesheet" href="shared/app-brand.css">
+    <link rel="stylesheet" href="assets/app.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <div class="marinos-banner">
+      <div class="marinos-banner__inner"><div class="menu marinos-menu"><button type="button" class="menu-toggle marinos-menu__toggle" aria-expanded="false" aria-controls="marinos-menu-panel"><span class="marinos-banner__icon" aria-hidden="true"><svg viewBox="0 0 48 48"><rect x="7" y="7" width="13" height="13" rx="2"/><rect x="28" y="7" width="13" height="13" rx="2"/><rect x="7" y="28" width="13" height="13" rx="2"/><rect x="28" y="28" width="13" height="13" rx="2"/></svg></span>MarinOS<sup>ALPHA</sup><svg class="menu-toggle__caret" aria-hidden="true" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4"/></svg></button><div id="marinos-menu-panel" class="menu-panel marinos-menu__panel" hidden><a href="https://marincountygov.github.io/marin-magic/"><span class="marinos-menu__icon" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="m24 5 2.8 9.2L36 17l-9.2 2.8L24 29l-2.8-9.2L12 17l9.2-2.8zM37 28l1.6 5.4L44 35l-5.4 1.6L37 42l-1.6-5.4L30 35l5.4-1.6zM11 28l1.2 3.8L16 33l-3.8 1.2L11 38l-1.2-3.8L6 33l3.8-1.2z"/></svg></span>MarinMagic</a><a href="https://marincountygov.github.io/marin-decision-maker/"><span class="marinos-menu__icon" aria-hidden="true"><svg viewBox="0 0 48 48"><circle cx="11" cy="12" r="4"/><circle cx="37" cy="12" r="4"/><circle cx="24" cy="37" r="4"/><path d="M15 12h18M35 16 26 33M13 16l9 17"/></svg></span>Marin Decision Maker</a><a href="https://marincountygov.github.io/marin-docs/"><span class="marinos-menu__icon" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M13 6h17l8 8v28H13z"/><path d="M30 6v9h8M19 24h13M19 31h13"/></svg></span>MarinDocs</a><a class="marinos-menu__all" href="https://marincountygov.github.io/marin-os/">Browse all in MarinOS</a></div></div></div>
+    </div>
+    <header class="app-header">
+      <div class="app-header__inner">
+        <div class="app-identity">
+          <div class="app-title-row">
+            <span class="app-icon" aria-hidden="true">
+              <svg viewBox="0 0 48 48"><rect x="7" y="7" width="13" height="13" rx="2"/><rect x="28" y="7" width="13" height="13" rx="2"/><rect x="7" y="28" width="13" height="13" rx="2"/><rect x="28" y="28" width="13" height="13" rx="2"/></svg>
+            </span>
+            <div class="app-title-copy"><h1 class="app-title">Media Monitor</h1><p class="app-subtitle">Marin County news, video, and social mentions</p></div>
+          </div>
+        </div>
+        <div class="app-header__actions">
+          <button type="button" class="app-menu-toggle secondary" id="menu-toggle" aria-expanded="false" aria-controls="app-nav">Menu</button>
+          <nav class="app-nav" id="app-nav" aria-label="Application navigation"><a href="#">Home</a><a href="#about">About</a><a href="#updates">Updates</a></nav>
+        </div>
+      </div>
+    </header>
+    <nav class="mm-page-tabs" id="page-tabs" aria-label="Sections"><a href="#latest" aria-current="page">Latest</a><a href="#sources">Sources</a><a href="#monitors">Monitors</a></nav>
+    <main id="main" class="container app-main" tabindex="-1">
+      <div id="app-status-message" class="visually-hidden" role="status" aria-live="polite"></div>
+
+      <section id="latest" class="app-page-heading" data-tab-section="latest">
+        <h2>Latest</h2>
+
+        <form id="filters" class="search-layout" aria-label="Filter mentions">
+          <aside class="search-sidebar" aria-label="Filter mentions">
+            <div class="search-input-field">
+              <label for="filter-search">Search</label>
+              <input type="search" id="filter-search" name="search" data-search-input placeholder="Search titles and text&hellip;" autocomplete="off">
+              <button type="button" class="secondary mm-reset" id="reset-filters-button">Reset</button>
+            </div>
+
+            <div class="search-input-field">
+              <label for="filter-time">Time</label>
+              <select id="filter-time" name="time">
+                <option value="24h" selected>Past 24 hours</option>
+                <option value="1h">Past hour</option>
+                <option value="3d">Past 3 days</option>
+                <option value="7d">Past week</option>
+                <option value="30d">Past 30 days</option>
+                <option value="60d">Past 60 days</option>
+                <option value="all">All available data</option>
+              </select>
+            </div>
+
+            <fieldset class="search-facet-group" id="monitor-chips" data-loading="true">
+              <legend>Monitors</legend>
+              <ul class="search-facet-list"><li class="app-help-text">Loading monitors&hellip;</li></ul>
+            </fieldset>
+
+            <fieldset class="search-facet-group" id="platform-checkboxes" data-loading="true">
+              <legend>Sources</legend>
+              <ul class="search-facet-list"><li class="app-help-text">Loading sources&hellip;</li></ul>
+            </fieldset>
+          </aside>
+
+          <div class="search-results">
+            <div role="tablist" aria-label="Content type" id="content-tabs">
+              <button type="button" role="tab" aria-selected="true" data-content-type="all" class="mm-tab">All</button>
+              <button type="button" role="tab" aria-selected="false" data-content-type="news" class="mm-tab">News</button>
+              <button type="button" role="tab" aria-selected="false" data-content-type="video" class="mm-tab">Video</button>
+              <button type="button" role="tab" aria-selected="false" data-content-type="social" class="mm-tab">Social</button>
+            </div>
+
+            <div class="mm-status-row">
+              <p class="app-help-text" id="last-updated">Loading&hellip;</p>
+              <button type="submit" class="mm-refresh" id="refresh-button" hidden>Refresh</button>
+            </div>
+
+            <p class="app-help-text" id="active-filters"></p>
+
+            <div class="mm-results-actions">
+              <p class="search-results-count app-help-text" id="mention-counts" aria-live="polite"></p>
+              <button type="button" class="secondary mm-copy-button" id="copy-email-button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>Copy</button>
+            </div>
+
+            <div class="mm-copy-fallback" id="copy-fallback" hidden>
+              <label for="copy-fallback-text">Couldn't copy automatically — select the text below and copy it manually (Ctrl/Cmd+C)</label>
+              <textarea id="copy-fallback-text" readonly rows="8"></textarea>
+            </div>
+
+            <ul id="media-feed" class="search-results-list" aria-label="Matching mentions"></ul>
+          </div>
+        </form>
+      </section>
+
+      <section id="sources" class="app-card" data-tab-section="sources" hidden>
+        <h2>Sources</h2>
+        <p>Every configured source, its ingestion method, and its status as of the last build.</p>
+        <div role="tablist" aria-label="Filter sources by type" id="source-type-tabs"></div>
+        <div id="sources-table-wrap" class="app-table-wrap"><p class="app-help-text" id="sources-status">Loading&hellip;</p></div>
+      </section>
+
+      <section id="monitors" class="app-card" data-tab-section="monitors" hidden>
+        <h2>Monitors</h2>
+        <div id="monitors-list"><p class="app-help-text" id="monitors-status">Loading&hellip;</p></div>
+      </section>
+
+      <section id="about" class="app-card" data-tab-section="about" hidden>
+        <h2>About</h2>
+        <p>Media Monitor is a stateless media-monitoring console for the San Francisco Bay Area, prioritizing Marin County. It combines direct publisher RSS, Google News RSS, YouTube, and Bluesky into one feed, matched against keyword/phrase monitors defined in <code>config/monitors.yaml</code>.</p>
+
+        <h3>How refresh works</h3>
+        <p>There is no database and no live per-request fetching. A scheduled GitHub Actions build runs roughly every 10&ndash;15 minutes: it fetches every enabled source, matches monitors, deduplicates, merges the result with the previously published snapshot (keeping items from the last 7 days), and republishes <code>data.json</code>. The <strong>Refresh</strong> button reloads that snapshot in your browser &mdash; it does not trigger a new fetch.</p>
+
+        <h3>Known limitations</h3>
+        <ul>
+          <li>Time filters only apply to what the current snapshot holds. An item that scrolled off a source's own feed before it was ever fetched will never appear, even if it's within the selected time range.</li>
+          <li>Google News RSS links point to a Google redirect page, not the publisher's article directly &mdash; this is a Google limitation, not a broken link. The link still works when clicked in a browser.</li>
+          <li>Deduplication prefers a direct publisher result over a Google News result for the same story, matched by outlet + headline since Google's redirect links can't be resolved to a canonical URL server-side.</li>
+          <li>YouTube and Bluesky require API access; see the README for activation status and quota/rate-limit notes.</li>
+        </ul>
+      </section>
+
+      <section id="updates" class="app-card" data-tab-section="updates" data-updates-repo="marin-media-monitor" data-app-name="Media Monitor" hidden>
+        <h2>Updates</h2>
+        <p data-updates-status class="app-help-text" role="status" aria-live="polite" aria-atomic="true">Loading recent commits&hellip;</p>
+        <div data-updates-list></div>
+      </section>
+    </main>
+    <footer class="app-footer" role="contentinfo"><div class="app-footer__inner"><a href="https://marincountygov.github.io/marin-os/">MarinOS</a></div></footer>
+    <a class="app-feedback" href="https://form.asana.com/?k=qVUT83d5DBmlDiIyi-WAyQ&amp;d=23133298259496" target="_blank" rel="noreferrer">Feedback</a>
+    <script src="shared/app-shell.js"></script>
+    <script src="assets/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,60 @@
+name: Build and deploy
+
+on:
+  schedule:
+    # Every 10 minutes. GitHub may delay scheduled runs under load — the
+    # per-source refreshIntervalMinutes in config/sources.yaml (checked
+    # inside build/index.js against the previously published snapshot) is
+    # what actually governs how often each source is re-fetched, so an
+    # occasional late/skipped run doesn't break the caching model.
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm ci
+
+      - name: Build data.json (merging with the currently live snapshot)
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+        run: |
+          mkdir -p dist
+          cp -r index.html assets shared vendor dist/
+          node build/index.js \
+            --out=dist/data.json \
+            --previous="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/data.json"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
