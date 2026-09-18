@@ -596,7 +596,7 @@ sources:
     name: Bluesky
     type: bluesky
     region: bay-area
-    enabled: false
+    enabled: true
     costCategory: free
     note: >-
       Disabled 2026-09-18: Bluesky's unauthenticated searchPosts endpoint
