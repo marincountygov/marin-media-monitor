@@ -585,20 +585,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Order (per request): heading, then date + source (date first), then
   // description, then which monitors matched.
-  const TIME_RANGE_PHRASES = {
-    "1h": "last hour",
-    "24h": "last 24 hours",
-    "3d": "last 3 days",
-    "7d": "last week",
-    "30d": "last 30 days",
-    "60d": "last 60 days",
-  };
-
-  // "(last 60 days)" for a bounded time filter; "(since Aug 3, 2026)" for
-  // "All available data", where there's no fixed window to name — derived
-  // from the oldest item actually in the digest.
+  // "(Past 3 days)" — reuses the Time dropdown's own option text, so this
+  // always matches what the sidebar/"Showing:" line say verbatim, for a
+  // bounded time filter. "(since Aug 3, 2026)" for "All available data",
+  // where there's no fixed window to name — derived from the oldest item
+  // actually in the digest.
   function digestRangeLabel(items) {
-    if (state.time !== "all") return `(${TIME_RANGE_PHRASES[state.time] || state.time})`;
+    if (state.time !== "all") {
+      const timeLabel = elements.timeSelect?.options[elements.timeSelect.selectedIndex]?.text;
+      return `(${timeLabel || state.time})`;
+    }
     if (!items.length) return "";
     const oldest = items.reduce((min, item) => Math.min(min, new Date(item.publishedAt).getTime()), Infinity);
     return `(since ${new Date(oldest).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })})`;
